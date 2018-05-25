@@ -26,6 +26,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #define LOG_NIDEBUG 0
 
 #include <errno.h>
@@ -73,7 +74,6 @@ int set_interactive_override(int on)
 
     if (get_scaling_governor(governor, sizeof(governor)) == -1) {
         ALOGE("Can't obtain scaling governor.");
-
         return HINT_NONE;
     }
 
@@ -93,27 +93,25 @@ int set_interactive_override(int on)
         }
 
         if (is_ondemand_governor(governor)) {
-            int resource_values[] = {MS_500, SYNC_FREQ_600, OPTIMAL_FREQ_600, THREAD_MIGRATION_SYNC_OFF};
-
+            int resource_values[] = {
+                MS_500, SYNC_FREQ_600, OPTIMAL_FREQ_600, THREAD_MIGRATION_SYNC_OFF
+            };
             perform_hint_action(DISPLAY_STATE_HINT_ID,
                     resource_values, ARRAY_SIZE(resource_values));
-
-            return HINT_HANDLED;
         }
     } else {
         /* Display on */
         if (is_target_8974pro()) {
-            int resource_values2[] = {CPUS_ONLINE_MIN_2};
+            int resource_values2[] = {
+                CPUS_ONLINE_MIN_2
+            };
             perform_hint_action(DISPLAY_STATE_HINT_ID_2,
                     resource_values2, ARRAY_SIZE(resource_values2));
         }
 
         if (is_ondemand_governor(governor)) {
             undo_hint_action(DISPLAY_STATE_HINT_ID);
-
-            return HINT_HANDLED;
         }
     }
-
-    return HINT_NONE;
+    return HINT_HANDLED;
 }

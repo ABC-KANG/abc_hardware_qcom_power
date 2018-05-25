@@ -82,13 +82,11 @@ int power_hint_override(power_hint_t hint, void *data)
         case POWER_HINT_VSYNC:
             break;
         case POWER_HINT_INTERACTION:
-        {
             int resources[] = {0x702, 0x20F, 0x30F};
             int duration = 3000;
 
             interaction(duration, ARRAY_SIZE(resources), resources);
             return HINT_HANDLED;
-        }
         case POWER_HINT_VIDEO_ENCODE: /* Do nothing for encode case */
             return HINT_HANDLED;
         case POWER_HINT_VIDEO_DECODE: /* Do nothing for decode case */
@@ -104,13 +102,12 @@ int set_interactive_override(int on)
     char governor[80];
     char tmp_str[NODE_MAX];
 
-    ALOGI("Got set_interactive hint");
     if (get_scaling_governor_check_cores(governor, sizeof(governor), CPU0) == -1) {
         if (get_scaling_governor_check_cores(governor, sizeof(governor), CPU1) == -1) {
             if (get_scaling_governor_check_cores(governor, sizeof(governor), CPU2) == -1) {
                 if (get_scaling_governor_check_cores(governor, sizeof(governor), CPU3) == -1) {
                     ALOGE("Can't obtain scaling governor.");
-                    return HINT_HANDLED;
+                    return HINT_NONE;
                 }
             }
         }
@@ -120,14 +117,17 @@ int set_interactive_override(int on)
         /* Display off. */
         if (is_target_8916()) {
             if (is_interactive_governor(governor)) {
-                int resource_values[] = {TR_MS_50, THREAD_MIGRATION_SYNC_OFF};
+                int resource_values[] = {
+                    TR_MS_50, THREAD_MIGRATION_SYNC_OFF
+                };
                 perform_hint_action(DISPLAY_STATE_HINT_ID,
                         resource_values, ARRAY_SIZE(resource_values));
-            } /* Perf time rate set for 8916 target */
-        /* End of display hint for 8916 */
+            }
         } else {
             if (is_interactive_governor(governor)) {
-                int resource_values[] = {TR_MS_CPU0_50,TR_MS_CPU4_50, THREAD_MIGRATION_SYNC_OFF};
+                int resource_values[] = {
+                    TR_MS_CPU0_50, TR_MS_CPU4_50, THREAD_MIGRATION_SYNC_OFF
+                };
 
                 /* Set CPU0 MIN FREQ to 400Mhz avoid extra peak power
                    impact in volume key press */
@@ -143,8 +143,8 @@ int set_interactive_override(int on)
                 }
                 perform_hint_action(DISPLAY_STATE_HINT_ID,
                         resource_values, ARRAY_SIZE(resource_values));
-            } /* Perf time rate set for CORE0,CORE4 8939 target */
-        } /* End of display hint for 8939 */
+            }
+        }
     } else {
         /* Display on. */
         if (is_target_8916()) {
@@ -166,7 +166,7 @@ int set_interactive_override(int on)
                 }
                 undo_hint_action(DISPLAY_STATE_HINT_ID);
             }
-        } /* End of check condition during the DISPLAY ON case */
+        }
     }
     return HINT_HANDLED;
 }

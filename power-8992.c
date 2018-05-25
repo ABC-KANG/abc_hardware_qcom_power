@@ -26,6 +26,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #define LOG_NIDEBUG 0
 
 #include <errno.h>
@@ -54,23 +55,22 @@ static int process_video_encode_hint(void *metadata)
 
     if (get_scaling_governor(governor, sizeof(governor)) == -1) {
         ALOGE("Can't obtain scaling governor.");
-
-        return HINT_NONE;
+        return;
     }
 
-    /* Initialize encode metadata struct fields */
+    if (!metadata) {
+        return;
+    }
+
+    /* Initialize encode metadata struct fields. */
     memset(&video_encode_metadata, 0, sizeof(struct video_encode_metadata_t));
     video_encode_metadata.state = -1;
     video_encode_metadata.hint_id = DEFAULT_VIDEO_ENCODE_HINT_ID;
 
-    if (metadata) {
-        if (parse_video_encode_metadata((char *)metadata, &video_encode_metadata) ==
-            -1) {
-            ALOGE("Error occurred while parsing metadata.");
-            return HINT_NONE;
-        }
-    } else {
-        return HINT_NONE;
+    if (parse_video_encode_metadata((char *)metadata,
+            &video_encode_metadata) == -1) {
+        ALOGE("Error occurred while parsing metadata.");
+        return;
     }
 
     if (video_encode_metadata.state == 1) {
@@ -81,19 +81,17 @@ static int process_video_encode_hint(void *metadata)
              * above_hispeed_delay - 40ms
              * sched_small_tsk - 50
              */
-            int resource_values[] = {0x2C07, 0x2F5A, 0x2704, 0x4032};
-
+            int resource_values[] = {
+                0x2C07, 0x2F5A, 0x2704, 0x4032
+            };
             perform_hint_action(video_encode_metadata.hint_id,
                     resource_values, ARRAY_SIZE(resource_values));
-            return HINT_HANDLED;
         }
     } else if (video_encode_metadata.state == 0) {
         if (is_interactive_governor(governor)) {
             undo_hint_action(video_encode_metadata.hint_id);
-            return HINT_HANDLED;
         }
     }
-    return HINT_NONE;
 }
 
 int power_hint_override(power_hint_t hint, void *data)
@@ -115,7 +113,6 @@ int set_interactive_override(int on)
 
     if (get_scaling_governor(governor, sizeof(governor)) == -1) {
         ALOGE("Can't obtain scaling governor.");
-
         return HINT_NONE;
     }
 
@@ -125,14 +122,12 @@ int set_interactive_override(int on)
             int resource_values[] = {0x777}; /* 4+0 core config in display off */
             perform_hint_action(DISPLAY_STATE_HINT_ID,
                     resource_values, ARRAY_SIZE(resource_values));
-            return HINT_HANDLED;
         }
     } else {
         /* Display on */
         if (is_interactive_governor(governor)) {
             undo_hint_action(DISPLAY_STATE_HINT_ID);
-            return HINT_HANDLED;
         }
     }
-    return HINT_NONE;
+    return HINT_HANDLED;
 }

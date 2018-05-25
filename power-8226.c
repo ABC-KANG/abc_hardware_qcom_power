@@ -26,6 +26,7 @@
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 #define LOG_NIDEBUG 0
 
 #include <errno.h>
@@ -51,13 +52,13 @@ int power_hint_override(power_hint_t hint, void *data)
 {
     switch(hint) {
         case POWER_HINT_INTERACTION:
-        {
             int resources[] = {0x702, 0x20B, 0x30B};
             int duration = 3000;
 
             interaction(duration, ARRAY_SIZE(resources), resources);
             return HINT_HANDLED;
-        }
+        default:
+            break;
     }
     return HINT_NONE;
 }
